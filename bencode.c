@@ -294,38 +294,56 @@ be_parse(const char *str)
 }
 
 void
-log_bencode(struct bencode *be)
+_log_bencode(struct bencode *be, size_t space_count)
 {
 	struct bencode *ben;
+	size_t n;
 
 	switch (be->be_type) {
 	case BET_INTEGER:
-		printf("Integer[%lld]\n", be->be_int);
+		printf("%lld", be->be_int);
 		break;
 
 	case BET_STRING:
-		printf("String[%s]\n", be->be_str);
+		printf("\"%s\"", be->be_str);
 		break;
 
 	case BET_LIST:
-		printf("List:\n");
+		printf("[");
 		TAILQ_FOREACH(ben, &be->be_list, be_entry) {
-			printf("\t");
-			log_bencode(ben);
+			_log_bencode(ben, space_count + 4);
+			if (TAILQ_NEXT(ben, be_entry))
+				printf(", ");
 		}
+		printf("]");
 		break;
 
 	case BET_DICT:
-		printf("Dict:\n");
+		printf("{\n");
 		TAILQ_FOREACH(ben, &be->be_list, be_entry) {
-			printf("\t[%s]=", ben->be_dictkey);
-			log_bencode(ben);
-			printf(", ");
+			for (n = 0; n < space_count; n++)
+				printf(" ");
+
+			printf("\"%s\" = ", ben->be_dictkey);
+			_log_bencode(ben, space_count + 4);
+			if (TAILQ_NEXT(ben, be_entry))
+				printf(",\n");
 		}
+		printf("\n");
+		for (n = 0; n < (space_count - 4); n++)
+			printf(" ");
+
+		printf("}");
 		break;
 
 	default:
 		printf("Unknown[%d]", be->be_type);
 		break;
 	}
+}
+
+void
+log_bencode(struct bencode *be)
+{
+	_log_bencode(be, 4);
 }

@@ -37,12 +37,16 @@ struct bencode {
 	union {
 		TAILQ_HEAD(, bencode) bev_list;
 		int64_t bev_int;
-		char *bev_str;
+		struct {
+			char *bev_str;
+			size_t bev_strlen;
+		};
 	} be_value;
 #define be_int be_value.bev_int
 #define be_list be_value.bev_list
 #define be_dict be_value.bev_list
 #define be_str be_value.bev_str
+#define be_strlen be_value.bev_strlen
 
 	TAILQ_ENTRY(bencode) be_entry;
 };

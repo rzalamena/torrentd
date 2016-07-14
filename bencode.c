@@ -23,7 +23,7 @@
 
 #include "bencode.h"
 
-static int parse_string(struct be_parser *, char **);
+static int parse_string(struct be_parser *, char **, size_t *);
 static struct bencode *be_parse_string(struct be_parser *);
 static struct bencode *be_parse_integer(struct be_parser *);
 static struct bencode *be_parse_list(struct be_parser *);
@@ -60,7 +60,7 @@ be_free(struct bencode *be)
 }
 
 static int
-parse_string(struct be_parser *bp, char **str)
+parse_string(struct be_parser *bp, char **str, size_t *slen)
 {
 	char *sptr;
 	char *dst;
@@ -93,6 +93,8 @@ parse_string(struct be_parser *bp, char **str)
 		/* Copy the string and update pointer again. */
 		memcpy(dst, bp->bp_cur, len);
 		dst[len] = 0;
+		if (slen)
+			*slen = len;
 
 		bp->bp_cur += len;
 	} else
@@ -107,8 +109,9 @@ be_parse_string(struct be_parser *bp)
 {
 	struct bencode *be;
 	char *dst;
+	size_t slen;
 
-	if (parse_string(bp, &dst))
+	if (parse_string(bp, &dst, &slen))
 		return (NULL);
 
 	/* Prepare the result and return */
@@ -120,6 +123,7 @@ be_parse_string(struct be_parser *bp)
 
 	be->be_type = BET_STRING;
 	be->be_str = dst;
+	be->be_strlen = slen;
 	return (be);
 }
 
@@ -231,7 +235,7 @@ be_parse_dict(struct be_parser *bp)
 	for (len = bp->bp_end - bp->bp_cur;
 	     *bp->bp_cur && len > 0;
 	     len = bp->bp_end - bp->bp_cur) {
-		if (parse_string(bp, &dst))
+		if (parse_string(bp, &dst, NULL))
 			break;
 
 		ben = be_parse_bp(bp);

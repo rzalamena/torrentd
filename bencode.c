@@ -29,6 +29,8 @@ static struct bencode *be_parse_integer(struct be_parser *);
 static struct bencode *be_parse_list(struct be_parser *);
 static struct bencode *be_parse_bp(struct be_parser *);
 
+static void _log_bencode(struct bencode *, size_t);
+
 void
 be_free(struct bencode *be)
 {
@@ -293,7 +295,7 @@ be_parse(const char *str)
 	return (be_nparse(str, 0));
 }
 
-void
+static void
 _log_bencode(struct bencode *be, size_t space_count)
 {
 	struct bencode *ben;

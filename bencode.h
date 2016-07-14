@@ -19,6 +19,8 @@
 
 #include <sys/queue.h>
 
+#include <stdint.h>
+
 enum bencode_type {
 	BET_UNKNOWN = 0,
 	BET_DICT,

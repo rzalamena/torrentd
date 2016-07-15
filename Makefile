@@ -7,12 +7,17 @@ CFLAGS+=	-Wshadow -Wpointer-arith
 CFLAGS+=	-Wsign-compare
 
 PROG=		bencode
-OBJS=		bencode.o
+OBJS=		bencode.o log.o torrent.o
+
+.PHONY: clean
 
 all: ${PROG}
 
 ${PROG}: ${OBJS}
-	${CC} ${CFLAGS} -o $@ $<
+	${CC} ${CFLAGS} -o $@ ${OBJS}
 
 .c.o:
 	${CC} ${CFLAGS} -c -o $@ $<
+
+clean:
+	rm -f -- ${OBJS} ${PROG}

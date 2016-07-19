@@ -58,6 +58,7 @@ struct be_parser {
 
 struct bencode *be_parse(const char *);
 struct bencode *be_nparse(const char *, size_t);
+struct bencode *be_new(enum bencode_type);
 void be_free(struct bencode *);
 void log_bencode(struct bencode *);
 

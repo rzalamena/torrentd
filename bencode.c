@@ -31,6 +31,20 @@ static struct bencode *be_parse_bp(struct be_parser *);
 
 static void _log_bencode(struct bencode *, size_t);
 
+struct bencode *
+be_new(enum bencode_type bet)
+{
+	struct bencode *be;
+
+	be = calloc(1, sizeof(*be));
+	if (be == NULL)
+		return (NULL);
+
+	be->be_type = bet;
+	TAILQ_INIT(&be->be_list);
+	return (be);
+}
+
 void
 be_free(struct bencode *be)
 {
@@ -115,13 +129,12 @@ be_parse_string(struct be_parser *bp)
 		return (NULL);
 
 	/* Prepare the result and return */
-	be = calloc(1, sizeof(*be));
+	be = be_new(BET_STRING);
 	if (be == NULL) {
 		free(dst);
 		return (NULL);
 	}
 
-	be->be_type = BET_STRING;
 	be->be_str = dst;
 	be->be_strlen = slen;
 	return (be);
@@ -156,11 +169,10 @@ be_parse_integer(struct be_parser *bp)
 
 	bp->bp_cur++;
 
-	be = calloc(1, sizeof(*be));
+	be = be_new(BET_INTEGER);
 	if (be == NULL)
 		return (NULL);
 
-	be->be_type = BET_INTEGER;
 	be->be_int = num;
 	return (be);
 }
@@ -180,13 +192,9 @@ be_parse_list(struct be_parser *bp)
 	 */
 	bp->bp_cur++;
 
-	be = calloc(1, sizeof(*be));
+	be = be_new(BET_LIST);
 	if (be == NULL)
 		return (NULL);
-
-	be->be_type = BET_LIST;
-
-	TAILQ_INIT(&be->be_list);
 
 	for (len = bp->bp_end - bp->bp_cur;
 	     *bp->bp_cur && len > 0;
@@ -225,12 +233,9 @@ be_parse_dict(struct be_parser *bp)
 	 */
 	bp->bp_cur++;
 
-	be = calloc(1, sizeof(*be));
+	be = be_new(BET_DICT);
 	if (be == NULL)
 		return (NULL);
-
-	be->be_type = BET_DICT;
-	TAILQ_INIT(&be->be_list);
 
 	for (len = bp->bp_end - bp->bp_cur;
 	     *bp->bp_cur && len > 0;

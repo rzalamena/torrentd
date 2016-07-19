@@ -48,6 +48,8 @@ struct torrent {
 struct torrent *parse_torrent(const char *);
 void free_torrent(struct torrent *);
 
+struct tfile *to_addfile(struct torrent *, char *, size_t);
+
 /* log.c */
 void log_init(int);
 void log_verbose(int);

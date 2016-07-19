@@ -48,6 +48,23 @@ be_strdup(struct bencode *be, char **str)
 	return (0);
 }
 
+struct tfile *
+to_addfile(struct torrent *to, char *path, size_t length)
+{
+	struct tfile *tf;
+
+	tf = calloc(1, sizeof(*tf));
+	if (tf == NULL) {
+		log_warn("failed to create file entry");
+		return (NULL);
+	}
+
+	tf->tf_path = path;
+	tf->tf_length = length;
+	TAILQ_INSERT_HEAD(&to->to_filelist, tf, tf_entry);
+	return (tf);
+}
+
 static int
 load_bencode(const char *path, char **bestr, size_t *belen)
 {
@@ -141,7 +158,6 @@ load_tracker(struct torrent *to, struct bencode *be)
 static int
 load_file(struct torrent *to, struct bencode *be)
 {
-	struct tfile *tf;
 	struct bencode *ben, *bep;
 	char *tname = NULL;
 	size_t fsize = 0;
@@ -173,18 +189,15 @@ load_file(struct torrent *to, struct bencode *be)
 		}
 	}
 
-	if (tname == NULL || fsize == 0)
-		return (-1);
-
-	tf = calloc(1, sizeof(*tf));
-	if (tf == NULL) {
-		free(tname);
+	if (tname == NULL || fsize == 0) {
+		log_debug("failed to find torrent file description");
 		return (-1);
 	}
 
-	tf->tf_path = tname;
-	tf->tf_length = fsize;
-	TAILQ_INSERT_TAIL(&to->to_filelist, tf, tf_entry);
+	if (to_addfile(to, tname, fsize) == NULL) {
+		log_warn("failed to add file to torrent");
+		return (-1);
+	}
 
 	return (0);
 }
@@ -208,7 +221,6 @@ static int
 load_info(struct torrent *to, struct bencode *be)
 {
 	struct bencode *ben;
-	struct tfile *tf;
 	char *tname = NULL;
 	size_t fsize = 0;
 	int is_single_file = 1;
@@ -271,15 +283,10 @@ load_info(struct torrent *to, struct bencode *be)
 			return (-1);
 		}
 
-		tf = calloc(1, sizeof(*tf));
-		if (tf == NULL) {
-			log_warn("failed to allocate file description");
+		if (to_addfile(to, tname, fsize) == NULL) {
+			log_warn("failed to add file to torrent");
 			return (-1);
 		}
-
-		tf->tf_path = tname;
-		tf->tf_length = fsize;
-		TAILQ_INSERT_HEAD(&to->to_filelist, tf, tf_entry);
 	}
 
 	return (0);
